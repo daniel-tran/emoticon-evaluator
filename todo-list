@@ -2,6 +2,8 @@ Modularise the code so the data-related functions are in their own source files
 
 Simplify implementation by using a "pseudo-regex" approach
 
+Refactor code once code has been simplified and modularised
+
 Implement project using proper regex (low priority)
 
 Include non-ASCII emoticons such as ಠ_ಠ (low priority)
