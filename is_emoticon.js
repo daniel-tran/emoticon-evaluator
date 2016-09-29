@@ -79,219 +79,225 @@ function test(txt, expect){
 
 function is_emoticon(str){
 	
-	//Manual check for all emoticons not in the standard face form e.g. <3, ...
-	//For compilation reasons, </3 is a valid emoticon but will not be printed 
-	//in the standard way. (< is interpreted as a tag entry)
+	var result = (check_emoticon(str, 0, 1, 0, 1, false) || 
+				  check_emoticon(str, 0, 1, 1, 1, false) ||
+				  check_emoticon(str, 1, 1, 0, 1, false) ||
+				  check_emoticon(str, 1, 1, 1, 1, false) ||
+				  
+				  //Check inverse emoticons
+				  check_emoticon(str, 1, 0, 1, 0, true) ||
+				  check_emoticon(str, 1, 1, 1, 0, true) ||
+				  check_emoticon(str, 1, 0, 1, 1, true) ||
+				  check_emoticon(str, 1, 1, 1, 1, true) ||
+				  
+				  //Check Eastern emoticons, with and without sides
+				  check_eastern_emoticon(str, 0, 1, 1, 1, 0) ||
+				  check_eastern_emoticon(str, 1, 1, 1, 1, 1));
 	
-	switch (str){
-		case "<3":
-		case "</3": 
-			return print(true);
+	return print(result);
+}
+
+function check_emoticon(str, brows_num, eyes_num, nose_num, mouth_num, inverse){
+	
+	var expect_length = brows_num + eyes_num + nose_num + mouth_num;
+	if (str.length != expect_length){
+		return false;
 	}
 	
-	var len = str.length; //This is just a truncation variable
-	var last_char = len - 1;
-	var first_index = 0;
-	var nose_index = first_index + 1;
+	var temp = "";
+	var brows = str.substring(0, brows_num);
 	
-	var inverse_brows_index = 0;
-	var inverse_eyes_index = inverse_brows_index + 1; //Use >:( as the template
-	var inverse_nose_index = last_char - 1;
+	temp += brows;
+	var eyes = extract(str, temp, eyes_num);
 	
-	var std_emot_length = 2; //Length of a simple emoticon (e.g. :L, XD, etc.)
-	var brows_emot_length = std_emot_length + 1;
+	temp += eyes;
+	var nose = extract(str, temp, nose_num);
 	
-	//is it an Asian emoticon? e.g. o_O, ;_;, ...
-	if (is_eastern_emoticon(str)){
-		return print(true);
+	temp += nose;
+	var mouth = extract(str, temp, mouth_num);
+	
+	/*
+	Prevent emoticons such as BB from passing (B is both an eye and mouth 
+	character). However, B-B is still technically valid, although it appears
+	more like an Eastern emoticon despite it not being part of that syntax.
+	*/
+	if (eyes == mouth && eyes_num > 0 && mouth_num > 0 && nose_num <= 0){
+		return false;
 	}
 	
-	//Emoticon eyes are presumed as first character
-	var eyes = str.charAt(first_index);
+	var result = true;
+	if (inverse){
+		
+		//Check for inverse emoticons (e.g. ):, O-:{, I-8, etc.)
+		result = (valid_item(brows, brows_num, valid_inverse_mouth) &&
+				  valid_item(eyes, eyes_num, valid_inverse_nose) &&
+				  valid_item(nose, nose_num, valid_inverse_eyes) &&
+				  valid_item(mouth, mouth_num, valid_inverse_brows));
+	}else{
+		
+		//Check for regular emoticons (e.g. :), >;^], B-T, etc.)
+		result = (valid_item(brows, brows_num, valid_brows) &&
+				  valid_item(eyes, eyes_num, valid_eyes) &&
+				  valid_item(nose, nose_num, valid_nose) &&
+				  valid_item(mouth, mouth_num, valid_mouth));
+	}
+	
+	return result;
+}
 
-	//If the emoticon is an eyes-first icon e.g. :P, :O, ...
-	if (valid_eyes(eyes)){
+function check_eastern_emoticon(str, left_side_num, left_eye_num, mouth_num, 
+									 right_eye_num, right_side_num){
+	
+	var expect_length = left_side_num + left_eye_num + mouth_num + 
+						right_eye_num + right_side_num;
+	if (str.length != expect_length){
+		return false;
+	}
+	
+	var temp = "";
+	var left_side = str.substring(0, left_side_num);
+	
+	temp += left_side;
+	var left_eye = extract(str, temp, left_eye_num);
+	
+	temp += left_eye;
+	var mouth = extract(str, temp, mouth_num);
+	
+	temp += mouth;
+	var right_eye = extract(str, temp, right_eye_num);
+	
+	temp += right_eye;
+	var right_side = extract(str, temp, right_side_num);
+	
+	//Prevent emoticons such as --- and ... from passing
+	if (left_eye == mouth && right_eye == mouth){
+		return false;
+	}
+	
+	var result = (valid_item_pair(str, left_side, right_side, 
+	                                  left_side_num, right_side_num, 
+									  valid_eastern_left_side, valid_eastern_right_side, 
+									  valid_eastern_sides) &&
+				 valid_item_pair(str, left_eye, right_eye, 
+	                                  left_eye_num, right_eye_num, 
+									  valid_eastern_left_eye, valid_eastern_right_eye, 
+									  valid_eastern_eyes) &&
+				 valid_item(mouth, mouth_num, valid_eastern_mouth) );
+	
+	return result;
+}
 
-		//Check if emoticon has enough characters with a valid mouth. (e.g. :-I, etc.)
-		if (str.length >= std_emot_length){
-			var mouth = str.charAt(last_char);
-			
-			//Check for a valid nose and that only one nose is present
-			if (str.length >= brows_emot_length){	
-			
-				var nose = str.charAt(nose_index);
-				
-				/*
-				Invalid emoticon has multiple noses or mouths.
-				The check is made here because the error can be caught 
-				better, otherwise the emoticon escapes into the else part
-				of this code segment, and enumerates to being true.
-				*/
-				if (!single_instance(str, nose) || !single_instance(str, mouth)){
-					return print(false);
-				}
-				
-				//Check for the format: eyes nose mouth (e.g. :-T)
-				return print(valid_eyes(eyes) && valid_nose(nose) && valid_mouth(mouth));
-			}else{
-				
-				/*
-				Check for only one instance of the mouth and valid eyes
-				This is to check for any characters that can be both eyes and mouths
-				(e.g. consider :B and B] where B is common).
-				Also check that eyes and mouth are different, so BB as an emoticon is not passed.
-				*/
-				if ((!single_instance(str, mouth) && !valid_eyes(eyes)) || (eyes == mouth)){
-					return print(false);
-				}
-				
-				//Check for the format: eyes mouth (e.g. :J)
-				return print(valid_eyes(eyes) && valid_mouth(mouth));
-			}   
-	    }
-	   
-	//If the emoticon is a brows-first emoticon (e.g. >:), >:D, etc.)
-	}else if (valid_brows(eyes) && valid_eyes(str.charAt(inverse_eyes_index))){
+/*
+Extracts a substring based on the occurrence of a certain item and the number 
+of items to expect in a given string. 
+*/
+function extract(str, item, item_num){
+	
+	var start = str.indexOf(item) + item.length;
+	
+	return str.substring(start, start + item_num);
+}
 
-		//Exception for >: and }:, which are indeed inverse emoticons but recognised mouth as brows
-		if (str.length == std_emot_length){
-			return print(true);
+/*
+Determines if a number of elements in a given item validate
+as being syntactically correct according to the validation function.
+*/
+function valid_item(item, item_num, item_func){
+	for (i = 0; i < item_num; i++){
+		var single_item = item.charAt(i);
+		
+		//If the element is not part of the syntax, the item is not valid
+		if (!item_func(single_item)){
+			return false;
 		}
+	}
+	
+	return true;
+}
 
-		//Remove brows and recheck the emoticon if valid
-		str = str.slice(inverse_eyes_index, len);
+/*
+Determines if a number of elements in a two given items validate
+as being syntactically correct according to their respective validation 
+functions.
+A general validation function and their parent string are supplied so
+that additional checks can be performed on the two items.
+*/
+function valid_item_pair(str, left_item, right_item, 
+                          left_item_num, right_item_num, 
+						  left_item_func, right_item_func, 
+						  item_func){
+							  
+	/*
+	Check that each left and right elements correspond according to the 
+	general validation function
+	*/
+	for (i = 0; i < left_item_num && i < right_item_num; i++){
+		var single_left_item = str.charAt(str.indexOf(left_item) + i);
+		var single_right_item = str.charAt(str.indexOf(right_item) + i);
+		
+		//If a pair of left and right elements mismatches, the item pair is not valid.
+		if (!item_func(single_left_item, single_right_item)){
+			return false;
+		}
+	}
+	
+	/*
+	The following code is utilised if left_item_num != right_item_num
+	(i.e. if an allowed format permits pairs with non-symmetrical element numbers)
+	*/
+	
+	if (left_item_num > right_item_num){
 		
 		/*
-		If there are more brows than necessary, it is not an emoticon.
-		Reprocess a simpler format of the emoticon with recursion.
+		Left side is longer than the right side, so find the excess left side
+		elements and check them for validity with the supplied left item function.
 		*/
-		var first_char = str.charAt(first_index);
-		if (!valid_brows(first_char)){
-			return is_emoticon(str);
-		}
+		var diff = left_item_num - right_item_num;
+		var locate = str.indexOf(left_item) + right_item_num;
 		
-	//If the emoticon is a mouth-first emoticon (e.g. D:, 0:, ):, etc.)
-	}else if (valid_inverse_mouth(eyes)){
-
-		//Re-label eyes as mouth (gets confusing if not changed)
-		var mouth = eyes;
-		
-		//Check for a new set of eyes, and set them up if allowed
-		if (str.length >= std_emot_length){    
-			var new_eyes = str.charAt(last_char);
-			var nose = str.charAt(inverse_nose_index);
+		for (i = 0; i < diff; i++){	
+			var single_item = str.charAt(locate + i);
 			
-			//Check for inverse brows (e.g. ]:<, etc.)
-			if (valid_inverse_brows(new_eyes) && valid_inverse_eyes(nose)){
-				
-				  str = str.slice(first_index, last_char); //Cut off the brows
-				  
-				  /*
-				  Check that there are no more inverse brows than necessary
-				  and reprocess a simpler format of the emoticon with recursion
-				  */
-				  var final_char = str.charAt(last_char);
-				  if (!valid_brows(final_char)){
-					  return is_emoticon(str);
-				  }
+			//An excess left item is not a valid left item
+			if (!left_item_func(single_item)){
+				return false;
 			}
+		}
+	}else if (right_item_num > left_item_num){
+		
+		/*
+		Right side is longer than the left side, so find the excess right side
+		elements and check them for validity with the supplied right item function.
+		*/
+		var diff = right_item_num - left_item_num;
+		var locate = str.indexOf(right_item) + left_item_num;
+		
+		for (i = 0; i < diff; i++){
+			var single_item = str.charAt(locate + i);
 			
-			//Emoticon has 3 characters, implied that there is a nose 
-			if (str.length >= brows_emot_length){
-				
-				/*
-				Invalid emoticon has multiple noses or mouths.
-				The check is made here because the error can be caught 
-				better, otherwise the emoticon escapes into the else part
-				of this code segment, and enumerates to being true.
-				*/
-				if (!single_instance(str, nose) || !single_instance(str, mouth)){
-					return print(false);
-				}
-				
-				//Check for format: mouth nose eyes (e.g. L-:, D*:, etc.)
-				return print(valid_inverse_eyes(new_eyes) && valid_inverse_nose(nose) 
-				          && valid_inverse_mouth(mouth));
-									
-			}else{
-				
-				//Check for only one instance of the mouth
-				if (!single_instance(str, mouth)){
-					return print(false);
-				}
-				
-				//Check for format: mouth eyes (e.g. O:)
-				return print(valid_inverse_mouth(mouth) && valid_inverse_eyes(new_eyes));
+			//An excess right item is not a valid right item
+			if (!right_item_func(single_item)){
+				return false;
 			}
 		}
 	}
 	
-	return print(false);
+	return true;
 }
 
 
 /**********************************************************************/
 
-function is_eastern_emoticon(str){
-	
-	var left = str.slice(0, 1);
-	var right = str.slice(str.length - 1, str.length);
-	var east_emot_length = 3;
-	
-	if (str.length == east_emot_length){
-		
-		var mouth = str.slice(1, 2);
-		
-		//Emoticons such as ___ and --- are not allowed, where all characters are the same.
-		if (left == mouth && right == mouth){
-			return false;
-		}
-		
-		return valid_eastern_eyes(left, right) && valid_eastern_mouth(mouth);
-	}else if (valid_eastern_sides(left, right)){
-		
-		//Cuts off the sides to properly evaluate the actual emoticon
-		str = str.slice(1, str.length - 1);
-		
-		//Check that only one layer of sides exists. This means ((O.o)) and >>_<<is not valid
-		left = str.slice(0, 1);
-		right = str.slice(str.length - 1, str.length);
-		
-		if (valid_eastern_sides(left, right)){
-			return false;
-		}
-		
-		return is_eastern_emoticon(str);
-	}
-
-	return false;
-}
-
 function valid_eastern_eyes(left, right){
 	
-	switch(left){
-		case "+":
-		case "-":
-		case "-":
-		case "^":
-		case "'":
-		case "T":
-		case "O":
-		case "o":
-		case "0":
-		case ">":
-		case ".":
-		case "X":
-		case "*":
-		case "@":
-		case "~":
-		case ";":
-		case "=":		
-			if ((right == left) || valid_different_eastern_eyes(left, right)){
-					return true;
-			}
-			break;
+	if (valid_eastern_reversible_eyes(left, right)){
+		return true;
 	}
+	
+	if (valid_different_eastern_eyes(left, right)){
+		return true;
+	}
+	
 
 	return false;
 }
@@ -317,6 +323,91 @@ function valid_different_eastern_eyes(left, right){
 	return false;
 }
 
+/*
+Evaluates the eyes of an Eastern emoticon where the eyes are both
+reversible and are the same (e.g. ^_^, ;-;, XoX, etc.)
+*/
+function valid_eastern_reversible_eyes(left, right){
+	
+	return (valid_eastern_reversible_eye(left) &&
+			valid_eastern_reversible_eye(right) &&
+			(left == right));
+}
+
+function valid_eastern_reversible_eye(eye){
+	
+	switch(eye){
+		case "+":
+		case "-":
+		case "-":
+		case "^":
+		case "'":
+		case "T":
+		case "O":
+		case "o":
+		case "0":
+		case ".":
+		case "X":
+		case "*":
+		case "@":
+		case "~":
+		case ";":
+		case "=":
+		case ">":
+			return true;
+	}
+
+	return false;
+}
+
+function valid_eastern_left_eye(eye){
+	
+	if (valid_eastern_reversible_eye(eye)){
+		return true;
+	}
+	
+	//Currently, no nonreversible Eastern eyes
+
+	return false;
+}
+
+/*
+Note that > is a reversible Eastern eye, but it is helpful for checking
+>_< where < is nonreversible.
+*//*
+function valid_eastern_nonreversible_left_eye(eye){
+	
+	switch(eye){
+		case ">":
+			return true;
+	}
+	
+	return false;
+}*/
+
+function valid_eastern_right_eye(eye){
+	
+	if (valid_eastern_reversible_eye(eye)){
+		return true;
+	}
+	
+	switch(eye){
+		case "<":
+			return true;
+	}
+
+	return false;
+}
+/*
+function valid_eastern_nonreversible_right_eye(eye){
+	switch(eye){
+		case "<":
+			return true;
+	}
+
+	return false;
+}*/
+
 function valid_eastern_mouth(mouth){
 
 	switch(mouth){
@@ -335,6 +426,28 @@ function valid_eastern_mouth(mouth){
 
 	return false;
 }
+
+
+function valid_eastern_left_side(left){
+
+	switch(left){
+		case "(":
+			return true;
+	}
+
+	return false;
+}
+
+function valid_eastern_right_side(right){
+
+	switch(right){
+		case ")":
+			return true;
+	}
+
+	return false;
+}
+
 
 function valid_eastern_sides(left, right){
 
@@ -544,62 +657,6 @@ function valid_inverse_mouth(mouth){
 /**********************************************************************/
 
 /*
-Checks that a given string has only one instance of a given character.
-This function is intended for general emoticon application, so both the 
-reverse and regular emoticons need to be checked for.
-
-This function works by taking the character called nose (can be any
-part of the emoticon in reality) in the string str and the characters
-to the immediate sides of nose (nbext and prev).
-Nose is type-checked with next and prev using same_type() and returns
-false if there is a match of nose && next, or nose and prev.
-*/
-function single_instance(str, nose){
-	
-	var pos = str.indexOf(nose);
-	var next = str.charAt(pos + 1);
-	var prev = str.charAt(pos - 1);
-	
-	//Check for emoticons in both directions e.g. :-^), and (^-:
-	if (same_type(nose, next) ||
-	    same_type(nose, prev)){
-		return false;
-	}
-	return true;
-}
-
-/*
-Type checking that two items are of the same category.
-valid_inverse_nose() is left commented in case it is implemented later on.
-*/
-function same_type(temp1, temp2){
-	
-	return ((valid_eyes(temp1) && 
-	         valid_eyes(temp2)) || 
-			 
-	        (valid_inverse_eyes(temp1) && 
-			 valid_inverse_eyes(temp2)) ||
-			 
-	        (valid_nose(temp1) && 
-			 valid_nose(temp2)) || //valid_inverse_nose(temp) ||
-			 
-	        (valid_mouth(temp1) && 
-			 valid_mouth(temp2)) || 
-			 
-			(valid_inverse_mouth(temp1) && 
-			 valid_inverse_mouth(temp2)) ||
-			 
-	        (valid_brows(temp1) && 
-			 valid_brows(temp2)) || 
-			 
-			(valid_inverse_brows(temp1) && 
-			 valid_inverse_brows(temp2))
-			);
-}
-
-/**********************************************************************/
-
-/*
 Standard printing method for emoticons.
 
 The process involves taking the (raw) input text,
@@ -615,4 +672,3 @@ function print(out){
 	document.getElementById("output").innerHTML += "<br>" + str + padding + out;
 	return out;
 }
-
