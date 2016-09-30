@@ -1,6 +1,8 @@
 Modularise the code so the data-related functions are in their own source files
 
-Simplify implementation by using a "pseudo-regex" approach
+COMPLETED! Simplify implementation by using a "pseudo-regex" approach
+
+Manage double definitions for right Eastern eyes
 
 Refactor code once code has been simplified and modularised
 
