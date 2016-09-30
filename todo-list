@@ -1,10 +1,12 @@
-Modularise the code so the data-related functions are in their own source files
+COMPLETED! Modularise the code so the data-related functions are in their own source files
 
 COMPLETED! Simplify implementation by using a "pseudo-regex" approach
 
 Manage double definitions for right Eastern eyes
 
-Refactor code once code has been simplified and modularised
+Manage "folder control" so all source files aren't piled into one place
+
+COMPLETED! Refactor code once code has been simplified and modularised
 
 Implement project using proper regex (low priority)
 
