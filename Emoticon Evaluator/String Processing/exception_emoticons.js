@@ -20,3 +20,4 @@ function check_exception_emoticon(str){
 	
 	return false;
 }
+
