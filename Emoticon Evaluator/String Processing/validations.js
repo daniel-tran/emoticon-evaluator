@@ -60,14 +60,14 @@ function valid_item_pair(str, left_item, right_item,
 		var diff = left_item_num - right_item_num;
 		var locate = str.indexOf(left_item) + right_item_num;
 		
-		for (i = 0; i < diff; i++){	
-			var single_item = str.charAt(locate + i);
-			
-			//An excess left item is not a valid left item
-			if (!left_item_func(single_item)){
-				return false;
-			}
+		//Extracts excess elements
+		var left_str = str.substr(locate, diff);
+		
+		//Check if all excess items validate correctly
+		if (!valid_item(left_str, diff, left_item_func)){
+			return false;
 		}
+		
 	}else if (right_item_num > left_item_num){
 		
 		/*
@@ -77,14 +77,14 @@ function valid_item_pair(str, left_item, right_item,
 		var diff = right_item_num - left_item_num;
 		var locate = str.indexOf(right_item) + left_item_num;
 		
-		for (i = 0; i < diff; i++){
-			var single_item = str.charAt(locate + i);
-			
-			//An excess right item is not a valid right item
-			if (!right_item_func(single_item)){
-				return false;
-			}
+		//Extracts excess elements
+		var right_str = str.substr(locate, diff);
+		
+		//Check if all excess items validate correctly
+		if (!valid_item(right_str, diff, right_item_func)){
+			return false;
 		}
+		
 	}
 	
 	return true;
