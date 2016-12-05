@@ -12,10 +12,10 @@ By Chris Coyier, apparently updated on 14 September, 2010
 */
 function htmlEntities(str) {
 	
-	//Convert str to a String to ensure that replace() is applied properly
+    //Convert str to a String to ensure that replace() is applied properly
     return String(str).replace(/&/g, '&amp;')
-	                  .replace(/</g, '&lt;')
-					  .replace(/>/g, '&gt;')
-					  .replace(/"/g, '&quot;');
+	              .replace(/</g, '&lt;')
+		      .replace(/>/g, '&gt;')
+		      .replace(/"/g, '&quot;');
 }
 
