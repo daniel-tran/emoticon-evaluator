@@ -6,7 +6,7 @@ COMPLETED! Refactor code once code has been simplified and modularised
 
 Try and get a better understanding of the 3 merge types Git provides.
 
-Attempt to solve the subversion problem (i.e. if <h1>}:O</h1> is entered as a string input) (mid priority)
+COMPLETED! Attempt to solve the subversion problem (i.e. if <h1>}:O</h1> is entered as a string input) (mid priority)
 
 Implement project using proper regex (low priority)
 

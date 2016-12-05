@@ -60,7 +60,7 @@ evaluation.
 Simply returns whatever was placed into the parameters.
 */
 function print(out){
-	var str = document.getElementById("input").value;
+	var str = htmlEntities(document.getElementById("input").value);
 	var padding = " #### ";
 	
 	document.getElementById("output").innerHTML += "<br>" + str + padding + out;
