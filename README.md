@@ -4,13 +4,13 @@ A utility that helps determine if a string is a valid emoticon. Made using JavaS
 Some questions you may have about the source code:
 
 
-##Q. Why not just use Regex to do your string checking?
+## Q. Why not just use Regex to do your string checking?
 
    I can't seem to get composite regex expressions working properly, and the original source code
    was translated from older GML code for a game I intended on making but never did.
    
    
-##Q. How come this wasn't initiallly started on Git from the ground-up?
+## Q. How come this wasn't initiallly started on Git from the ground-up?
 
    A few factors have affected why this project is uploaded to Git when it happened:
    - Due to inexperience, I plan to learn and progressively ease into the Git environment.
@@ -21,7 +21,7 @@ Some questions you may have about the source code:
      where Git can certainly help via branching since I'm trying to change the overall implementation.
    
    
-##Q. When will the project be finished?
+## Q. When will the project be finished?
 
    Being my first Git project where I'm actually using source code control, I would imagine that
    this could extend into a long-term project in terms of code maintenance and updating.
